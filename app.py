@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+import socket
 from typing import Dict, Optional, Any, List, Union
 from pathlib import Path
 
@@ -8,8 +9,6 @@ import undetected_chromedriver as uc
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, HttpUrl
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.remote.webdriver import WebDriver
 
 # Create profiles directory if it doesn't exist
 PROFILES_DIR = Path(os.path.dirname(os.path.abspath(__file__))) / "profiles"
@@ -18,17 +17,17 @@ PROFILES_DIR.mkdir(exist_ok=True)
 # Models for request and response
 class NavigateRequest(BaseModel):
     url: HttpUrl
-    proxy: Optional[str] = None
-    headless: bool = False  # Changed default to False - browser will be visible
     timeout: int = 30
+
+class StartBrowserRequest(BaseModel):
+    url: HttpUrl  # URL is required for browser start
+    proxy: Optional[str] = None
+    headless: bool = False
     profile_name: Optional[str] = "default"
 
 class JavascriptRequest(BaseModel):
     script: str
     timeout: int = 30
-
-class ProfileRequest(BaseModel):
-    profile_name: str = "default"
 
 class ProfileListResponse(BaseModel):
     profiles: List[str]
@@ -46,10 +45,10 @@ class ApiResponse(BaseModel):
 # Browser controller class
 class BrowserController:
     def __init__(self):
-        self.driver: Optional[WebDriver] = None
+        self.driver: Optional[Any] = None
         self.current_profile: Optional[str] = None
         
-    async def start_browser(self, headless: bool = True, proxy: Optional[str] = None, profile_name: str = "default") -> None:
+    async def start_browser(self, headless: bool = False, proxy: Optional[str] = None, profile_name: str = "default") -> None:
         """Start a new browser instance with the given options and profile"""
         # Close any existing session
         if self.driver:
@@ -145,7 +144,7 @@ app = FastAPI(
 browser = BrowserController()
 
 @app.post("/browser/start", response_model=ApiResponse)
-async def start_browser(request: NavigateRequest):
+async def start_browser(request: StartBrowserRequest):
     """Start a browser with the specified profile and navigate to the URL"""
     try:
         await browser.start_browser(
@@ -153,7 +152,7 @@ async def start_browser(request: NavigateRequest):
             proxy=request.proxy,
             profile_name=request.profile_name
         )
-        title = await browser.navigate_to(str(request.url), request.timeout)
+        title = await browser.navigate_to(str(request.url), 30)  # Use a default timeout for navigation
         return {"success": True, "data": {"title": title, "profile": request.profile_name}}
     except HTTPException as e:
         return {"success": False, "error": e.detail}
@@ -233,4 +232,15 @@ async def list_profiles():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import sys
+    
+    # Check if port is already in use before starting
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind(("0.0.0.0", 8000))
+        sock.close()
+        # Port is available, start the server
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    except socket.error as e:
+        print(f"Port 8000 is already in use. Server may already be running.")
+        sys.exit(0)  # Exit gracefully without error code
