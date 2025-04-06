@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox, simpledialog, font
+from tkinter import ttk, scrolledtext, messagebox, simpledialog
 import requests
 import json
 import base64
@@ -12,48 +12,16 @@ import sys
 import os
 
 class BrowserControllerGUI:
+    """
+    Main GUI class for the Stealth Browser Controller application.
+    Provides a user interface to control the undetected-chromedriver API.
+    """
     def __init__(self, root):
+        # Initialize main window
         self.root = root
         self.root.title("Stealth Browser Controller")
         self.root.geometry("1200x800")
         self.root.minsize(900, 700)
-        
-        # Apply a modern theme if available
-        try:
-            self.root.tk.call("source", "azure.tcl")
-            self.root.tk.call("set_theme", "dark")
-            self.theme_available = True
-        except:
-            self.theme_available = False
-        
-        # Create custom styles
-        self.style = ttk.Style()
-        if not self.theme_available:
-            # Define colors
-            self.bg_color = "#2E2E2E"
-            self.fg_color = "#FFFFFF"
-            self.accent_color = "#3498DB"
-            self.secondary_color = "#2980B9"
-            self.success_color = "#27AE60"
-            self.warning_color = "#E67E22"
-            self.error_color = "#E74C3C"
-            
-            # Set theme colors if a custom theme is not available
-            self.style.configure("TFrame", background=self.bg_color)
-            self.style.configure("TLabel", background=self.bg_color, foreground=self.fg_color)
-            self.style.configure("TButton", background=self.accent_color, foreground=self.fg_color)
-            self.style.configure("TCheckbutton", background=self.bg_color, foreground=self.fg_color)
-            self.style.configure("TLabelframe", background=self.bg_color, foreground=self.fg_color)
-            self.style.configure("TLabelframe.Label", background=self.bg_color, foreground=self.fg_color)
-            self.style.configure("TNotebook", background=self.bg_color, foreground=self.fg_color)
-            self.style.configure("TNotebook.Tab", background=self.bg_color, foreground=self.fg_color)
-            
-            self.root.configure(bg=self.bg_color)
-        
-        # Create a custom font
-        default_font = font.nametofont("TkDefaultFont")
-        default_font.configure(size=10)
-        self.root.option_add("*Font", default_font)
         
         # API base URL
         self.api_url = "http://localhost:8000"
@@ -94,13 +62,7 @@ class BrowserControllerGUI:
         self.status_bar = ttk.Label(status_frame, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
         
-        # Add a busy indicator
-        self.busy_var = tk.StringVar(value="●")
-        self.busy_indicator = ttk.Label(status_frame, textvariable=self.busy_var, width=2)
-        self.busy_indicator.pack(side=tk.RIGHT, padx=5)
-        self.set_idle()
-        
-        # Start server button
+        # Server controls
         self.server_frame = ttk.Frame(root)
         self.server_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=5)
         
@@ -112,26 +74,12 @@ class BrowserControllerGUI:
         self.server_button = ttk.Button(self.server_frame, text="Start Server", command=self.toggle_server)
         self.server_button.pack(side=tk.RIGHT, padx=5)
         
-    def set_busy(self):
-        """Show busy indicator"""
-        self.busy_var.set("🔄")
-        if not self.theme_available:
-            self.busy_indicator.configure(foreground=self.warning_color)
-        self.root.update_idletasks()
-    
-    def set_idle(self):
-        """Show idle indicator"""
-        self.busy_var.set("●")
-        if not self.theme_available:
-            self.busy_indicator.configure(foreground=self.success_color)
-        self.root.update_idletasks()
-        
     def _setup_browser_tab(self):
-        """Setup the browser control tab"""
+        """Setup the browser control tab with all necessary elements"""
         frame = ttk.LabelFrame(self.browser_tab, text="Browser Control")
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # URL input with icon
+        # URL input
         url_frame = ttk.Frame(frame)
         url_frame.grid(row=0, column=0, columnspan=4, sticky=tk.W+tk.E, padx=5, pady=5)
         
@@ -140,7 +88,7 @@ class BrowserControllerGUI:
         self.url_entry = ttk.Entry(url_frame, textvariable=self.url_var, width=70)
         self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
         
-        # Profile selector with nice dropdown
+        # Profile selector
         profile_frame = ttk.Frame(frame)
         profile_frame.grid(row=1, column=0, columnspan=4, sticky=tk.W+tk.E, padx=5, pady=5)
         
@@ -185,7 +133,7 @@ class BrowserControllerGUI:
         self.timeout_spin.pack(side=tk.LEFT, padx=5)
         ttk.Label(options_frame, text="seconds").pack(side=tk.LEFT)
         
-        # Buttons frame with improved styling
+        # Buttons frame
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=4, column=0, columnspan=4, pady=10)
         
@@ -198,63 +146,38 @@ class BrowserControllerGUI:
         self.close_button = ttk.Button(button_frame, text="Close Browser", command=self.close_browser)
         self.close_button.pack(side=tk.LEFT, padx=5)
         
-        # Create a paned window for request and response
-        paned = ttk.PanedWindow(frame, orient=tk.VERTICAL)
-        paned.grid(row=5, column=0, columnspan=4, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        # Request and response displays
+        req_resp_frame = ttk.Frame(frame)
+        req_resp_frame.grid(row=5, column=0, columnspan=4, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
         
         # Request display
-        request_frame = ttk.LabelFrame(paned, text="Request")
-        
-        request_actions = ttk.Frame(request_frame)
-        request_actions.pack(fill=tk.X, padx=5, pady=2)
-        
-        copy_request_button = ttk.Button(request_actions, text="Copy", 
-                                       command=lambda: self.copy_to_clipboard(self.browser_request.get(1.0, tk.END)))
-        copy_request_button.pack(side=tk.RIGHT)
-        
-        self.browser_request = scrolledtext.ScrolledText(request_frame, height=6, wrap=tk.WORD)
+        ttk.Label(req_resp_frame, text="Request:").pack(anchor=tk.W, padx=5)
+        self.browser_request = scrolledtext.ScrolledText(req_resp_frame, height=6, wrap=tk.WORD)
         self.browser_request.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         # Response display
-        response_frame = ttk.LabelFrame(paned, text="Response")
-        
-        response_actions = ttk.Frame(response_frame)
-        response_actions.pack(fill=tk.X, padx=5, pady=2)
-        
-        copy_response_button = ttk.Button(response_actions, text="Copy", 
-                                        command=lambda: self.copy_to_clipboard(self.browser_response.get(1.0, tk.END)))
-        copy_response_button.pack(side=tk.RIGHT)
-        
-        self.browser_response = scrolledtext.ScrolledText(response_frame, height=8, wrap=tk.WORD)
+        ttk.Label(req_resp_frame, text="Response:").pack(anchor=tk.W, padx=5)
+        self.browser_response = scrolledtext.ScrolledText(req_resp_frame, height=8, wrap=tk.WORD)
         self.browser_response.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # Add frames to paned window
-        paned.add(request_frame, weight=1)
-        paned.add(response_frame, weight=2)
         
         # Configure grid weights for resizing
         frame.grid_rowconfigure(5, weight=1)
         frame.grid_columnconfigure(0, weight=1)
         
     def _setup_js_tab(self):
-        """Setup the JavaScript tab"""
+        """Setup the JavaScript tab for executing scripts in the browser"""
         frame = ttk.LabelFrame(self.js_tab, text="Execute JavaScript")
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # JavaScript input with syntax highlighting appearance
-        ttk.Label(frame, text="JavaScript Code:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-        
-        # Create a frame for the code editor with a border
-        code_frame = ttk.Frame(frame, borderwidth=1, relief=tk.SUNKEN)
-        code_frame.grid(row=1, column=0, columnspan=4, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
-        
-        self.js_code = scrolledtext.ScrolledText(code_frame, height=8)
-        self.js_code.pack(fill=tk.BOTH, expand=True)
+        # JavaScript input
+        ttk.Label(frame, text="JavaScript Code:").pack(anchor=tk.W, padx=5, pady=5)
+        self.js_code = scrolledtext.ScrolledText(frame, height=8)
+        self.js_code.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.js_code.insert(tk.END, "document.title")
         
         # Execution controls
         controls_frame = ttk.Frame(frame)
-        controls_frame.grid(row=2, column=0, columnspan=4, sticky=tk.W, padx=5, pady=5)
+        controls_frame.pack(fill=tk.X, padx=5, pady=5)
         
         # Execute button
         self.execute_js_button = ttk.Button(controls_frame, text="Execute JavaScript", command=self.execute_js)
@@ -267,46 +190,17 @@ class BrowserControllerGUI:
         self.js_timeout_spin.pack(side=tk.LEFT, padx=2)
         ttk.Label(controls_frame, text="seconds").pack(side=tk.LEFT, padx=2)
         
-        # Create a paned window for request and response
-        paned = ttk.PanedWindow(frame, orient=tk.VERTICAL)
-        paned.grid(row=3, column=0, columnspan=4, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        # Request and response displays
+        ttk.Label(frame, text="Request:").pack(anchor=tk.W, padx=5)
+        self.js_request = scrolledtext.ScrolledText(frame, height=6, wrap=tk.WORD)
+        self.js_request.pack(fill=tk.BOTH, expand=False, padx=5, pady=5)
         
-        # Request display
-        request_frame = ttk.LabelFrame(paned, text="Request")
-        
-        request_actions = ttk.Frame(request_frame)
-        request_actions.pack(fill=tk.X, padx=5, pady=2)
-        
-        copy_request_button = ttk.Button(request_actions, text="Copy", 
-                                       command=lambda: self.copy_to_clipboard(self.js_request.get(1.0, tk.END)))
-        copy_request_button.pack(side=tk.RIGHT)
-        
-        self.js_request = scrolledtext.ScrolledText(request_frame, height=6, wrap=tk.WORD)
-        self.js_request.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # Response display
-        response_frame = ttk.LabelFrame(paned, text="Response")
-        
-        response_actions = ttk.Frame(response_frame)
-        response_actions.pack(fill=tk.X, padx=5, pady=2)
-        
-        copy_response_button = ttk.Button(response_actions, text="Copy", 
-                                        command=lambda: self.copy_to_clipboard(self.js_response.get(1.0, tk.END)))
-        copy_response_button.pack(side=tk.RIGHT)
-        
-        self.js_response = scrolledtext.ScrolledText(response_frame, height=8, wrap=tk.WORD)
+        ttk.Label(frame, text="Response:").pack(anchor=tk.W, padx=5)
+        self.js_response = scrolledtext.ScrolledText(frame, height=8, wrap=tk.WORD)
         self.js_response.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        # Add frames to paned window
-        paned.add(request_frame, weight=1)
-        paned.add(response_frame, weight=2)
-        
-        # Configure grid weights for resizing
-        frame.grid_rowconfigure(3, weight=1)
-        frame.grid_columnconfigure(0, weight=1)
-        
     def _setup_html_tab(self):
-        """Setup the HTML tab"""
+        """Setup the HTML tab for viewing page source"""
         frame = ttk.LabelFrame(self.html_tab, text="Page HTML")
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
@@ -318,42 +212,18 @@ class BrowserControllerGUI:
         self.get_html_button = ttk.Button(controls_frame, text="Get Page HTML", command=self.get_html)
         self.get_html_button.pack(side=tk.LEFT, padx=5, pady=5)
         
-        # Paned window for request/response
-        paned = ttk.PanedWindow(frame, orient=tk.VERTICAL)
-        paned.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
         # Request display
-        request_frame = ttk.LabelFrame(paned, text="Request")
+        ttk.Label(frame, text="Request:").pack(anchor=tk.W, padx=5)
+        self.html_request = scrolledtext.ScrolledText(frame, height=4, wrap=tk.WORD)
+        self.html_request.pack(fill=tk.X, expand=False, padx=5, pady=5)
         
-        request_actions = ttk.Frame(request_frame)
-        request_actions.pack(fill=tk.X, padx=5, pady=2)
-        
-        copy_request_button = ttk.Button(request_actions, text="Copy", 
-                                       command=lambda: self.copy_to_clipboard(self.html_request.get(1.0, tk.END)))
-        copy_request_button.pack(side=tk.RIGHT)
-        
-        self.html_request = scrolledtext.ScrolledText(request_frame, height=4, wrap=tk.WORD)
-        self.html_request.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # HTML display with copy button
-        html_frame = ttk.LabelFrame(paned, text="HTML Content")
-        
-        html_actions = ttk.Frame(html_frame)
-        html_actions.pack(fill=tk.X, padx=5, pady=2)
-        
-        copy_html_button = ttk.Button(html_actions, text="Copy HTML", 
-                                     command=lambda: self.copy_to_clipboard(self.html_display.get(1.0, tk.END)))
-        copy_html_button.pack(side=tk.RIGHT)
-        
-        self.html_display = scrolledtext.ScrolledText(html_frame, wrap=tk.WORD)
+        # HTML content display
+        ttk.Label(frame, text="HTML Content:").pack(anchor=tk.W, padx=5)
+        self.html_display = scrolledtext.ScrolledText(frame, wrap=tk.WORD)
         self.html_display.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        # Add frames to paned window
-        paned.add(request_frame, weight=1)
-        paned.add(html_frame, weight=4)
-        
     def _setup_screenshot_tab(self):
-        """Setup the screenshot tab"""
+        """Setup the screenshot tab for capturing browser screenshots"""
         frame = ttk.LabelFrame(self.screenshot_tab, text="Page Screenshot")
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
@@ -371,14 +241,12 @@ class BrowserControllerGUI:
         self.save_screenshot_button.config(state=tk.DISABLED)
         
         # Request section
-        request_frame = ttk.LabelFrame(frame, text="Request")
-        request_frame.pack(fill=tk.X, padx=5, pady=5)
-        
-        self.screenshot_request = scrolledtext.ScrolledText(request_frame, height=4, wrap=tk.WORD)
+        ttk.Label(frame, text="Request:").pack(anchor=tk.W, padx=5)
+        self.screenshot_request = scrolledtext.ScrolledText(frame, height=4, wrap=tk.WORD)
         self.screenshot_request.pack(fill=tk.X, expand=False, padx=5, pady=5)
         
         # Screenshot display
-        self.screenshot_frame = ttk.LabelFrame(frame, text="Screenshot")
+        self.screenshot_frame = ttk.LabelFrame(frame, text="Screenshot Preview")
         self.screenshot_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         self.screenshot_label = ttk.Label(self.screenshot_frame)
@@ -388,19 +256,18 @@ class BrowserControllerGUI:
         self.current_screenshot = None
     
     def _setup_profile_management(self):
-        """Setup profile management functions"""
+        """Setup profile management functionality"""
         self.profiles = ["default"]  # Will be populated when server starts
     
     def refresh_profiles(self):
-        """Refresh the list of available profiles"""
+        """Refresh the list of available profiles from the server"""
         self.status_var.set("Refreshing profiles...")
-        self.set_busy()
         
         # Show request details immediately
         endpoint = f"{self.api_url}/browser/profiles"
         self.root.update_idletasks()
         
-        # Send request in thread
+        # Send request in thread to keep UI responsive
         def send_request():
             try:
                 response = requests.get(endpoint)
@@ -429,13 +296,10 @@ class BrowserControllerGUI:
             self.status_var.set("Profiles refreshed")
         else:
             self.status_var.set(f"Error: {data.get('error', 'Failed to refresh profiles')}")
-        
-        self.set_idle()
     
     def _update_profile_error(self, error_msg):
         """Update status with profile error message"""
         self.status_var.set(f"Error refreshing profiles: {error_msg}")
-        self.set_idle()
     
     def add_profile(self):
         """Add a new browser profile"""
@@ -449,16 +313,9 @@ class BrowserControllerGUI:
             self.profile_var.set(profile_name)
             self.status_var.set(f"Profile '{profile_name}' will be created on next browser start")
     
-    def copy_to_clipboard(self, text):
-        """Copy text to clipboard"""
-        self.root.clipboard_clear()
-        self.root.clipboard_append(text)
-        self.status_var.set("Copied to clipboard")
-    
     def start_browser(self):
         """Start the browser with the selected profile and navigate to the specified URL"""
         self.status_var.set("Starting browser...")
-        self.set_busy()
         
         # Prepare request
         payload = {
@@ -508,20 +365,16 @@ class BrowserControllerGUI:
             self.status_var.set(f"Browser started with profile '{profile}' - {title}")
         else:
             self.status_var.set(f"Error: {data.get('error', 'Unknown error')}")
-        
-        self.set_idle()
     
     def _update_browser_error(self, error_msg):
         """Update response area with error message"""
         self.browser_response.delete(1.0, tk.END)
         self.browser_response.insert(tk.END, f"ERROR:\n{error_msg}")
         self.status_var.set(f"Error: {error_msg}")
-        self.set_idle()
     
     def navigate(self):
         """Navigate to the specified URL"""
         self.status_var.set("Navigating...")
-        self.set_busy()
         
         # Prepare request
         payload = {
@@ -561,13 +414,10 @@ class BrowserControllerGUI:
             self.status_var.set(f"Navigated to URL - {data.get('data', {}).get('title', '')}")
         else:
             self.status_var.set(f"Error: {data.get('error', 'Unknown error')}")
-        
-        self.set_idle()
     
     def close_browser(self):
         """Close the browser"""
         self.status_var.set("Closing browser...")
-        self.set_busy()
         
         # Show request details immediately
         endpoint = f"{self.api_url}/browser/close"
@@ -601,13 +451,10 @@ class BrowserControllerGUI:
             self.status_var.set("Browser closed")
         else:
             self.status_var.set(f"Error: {data.get('error', 'Unknown error')}")
-        
-        self.set_idle()
     
     def execute_js(self):
         """Execute JavaScript on the current page"""
         self.status_var.set("Executing JavaScript...")
-        self.set_busy()
         
         # Prepare request
         script = self.js_code.get(1.0, tk.END).strip()
@@ -650,20 +497,16 @@ class BrowserControllerGUI:
         else:
             self.js_response.insert(tk.END, f"ERROR: {data.get('error', 'Unknown error')}")
             self.status_var.set(f"Error: {data.get('error', 'Unknown error')}")
-        
-        self.set_idle()
     
     def _update_js_error(self, error_msg):
         """Update JavaScript response area with error message"""
         self.js_response.delete(1.0, tk.END)
         self.js_response.insert(tk.END, f"ERROR:\n{error_msg}")
         self.status_var.set(f"Error: {error_msg}")
-        self.set_idle()
     
     def get_html(self):
         """Get the HTML of the current page"""
         self.status_var.set("Getting HTML...")
-        self.set_busy()
         
         # Show request details immediately
         endpoint = f"{self.api_url}/browser/html"
@@ -699,20 +542,16 @@ class BrowserControllerGUI:
         else:
             self.html_display.insert(tk.END, f"ERROR: {data.get('error', 'Unknown error')}")
             self.status_var.set(f"Error: {data.get('error', 'Unknown error')}")
-        
-        self.set_idle()
     
     def _update_html_error(self, error_msg):
         """Update HTML display with error message"""
         self.html_display.delete(1.0, tk.END)
         self.html_display.insert(tk.END, f"ERROR:\n{error_msg}")
         self.status_var.set(f"Error: {error_msg}")
-        self.set_idle()
     
     def get_screenshot(self):
         """Get a screenshot of the current page"""
         self.status_var.set("Taking screenshot...")
-        self.set_busy()
         
         # Show request details immediately
         endpoint = f"{self.api_url}/browser/screenshot"
@@ -779,13 +618,10 @@ class BrowserControllerGUI:
                 self.status_var.set("Error: No screenshot data received")
         else:
             self.status_var.set(f"Error: {data.get('error', 'Unknown error')}")
-        
-        self.set_idle()
     
     def _update_screenshot_error(self, error_msg):
         """Update screenshot status with error message"""
         self.status_var.set(f"Error: {error_msg}")
-        self.set_idle()
     
     def save_screenshot(self):
         """Save the current screenshot to a file"""
@@ -854,6 +690,7 @@ class BrowserControllerGUI:
             self.root.after(1000, self.check_server_status)
 
 def main():
+    """Main entry point for the application"""
     root = tk.Tk()
     app = BrowserControllerGUI(root)
     root.mainloop()
