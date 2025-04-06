@@ -1,215 +1,171 @@
-# Undetected-Chromedriver-API
+# 🔐 Undetected-Chromedriver-API
+
+> **Automate with invisibility. Browse like a human, not a bot.**
 
 ![Undetected-Chromedriver-API](https://github.com/user-attachments/assets/56ff9a7f-a464-42a7-b974-332414047f23)
 
-A simple and powerful API layer built on top of `undetected-chromedriver` to control Chrome browsers programmatically. This project is perfect for developers who need to automate web interactions while bypassing anti-bot measures.
+[![Python 3.7+](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.68+-green.svg)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+
+A powerful REST API layer that wraps `undetected-chromedriver` to provide stealth browser automation. Perfect for developers building web scrapers, test automation tools, or any application that needs to bypass sophisticated bot detection systems.
 
 ## 🌟 Features
 
-- **Undetectable Browsing**: Uses `undetected-chromedriver` to bypass bot detection.
-- **RESTful API**: Control the browser using simple HTTP requests.
-- **Profile Management**: Save and reuse browser sessions with ease.
-- **JavaScript Execution**: Run custom JavaScript on any webpage.
-- **HTML Retrieval**: Fetch the source code of any webpage.
-- **Screenshot Capture**: Take screenshots of web pages as images.
-- **Proxy Support**: Browse anonymously using proxy servers.
-- **Headless Mode**: Run the browser in the background without a visible window.
+- 🛡️ **Undetectable Browsing** - Bypass Cloudflare, reCAPTCHA, and other bot detection systems
+- 🔌 **RESTful API** - Control browsers programmatically with simple HTTP requests
+- 🧩 **Profile Management** - Create, save and reuse browser sessions with different identities
+- 📝 **JavaScript Execution** - Run custom JavaScript remotely on any webpage
+- 🔍 **HTML Retrieval** - Fetch and analyze the source code of any webpage
+- 📸 **Screenshot Capture** - Take high-quality screenshots remotely
+- 🔒 **Proxy Support** - Route traffic through proxies for enhanced privacy
+- 👻 **Headless Mode** - Run browsers invisibly in the background
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Python 3.7 or higher
-- Chrome browser installed
+- 🐍 Python 3.7 or higher
+- 🌐 Chrome browser installed on your system
 
-### Installation
+### 🔧 Installation
 
-1. Clone this repository or download the files:
+1. **Clone the repository**
    ```bash
    git clone https://github.com/your-username/undetected-chromedriver-api.git
    cd undetected-chromedriver-api
    ```
 
-2. Install the required dependencies:
+2. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Start the API server:
+3. **Choose your method**
+
+   **Option A: GUI Interface (Recommended for beginners)**
+   ```bash
+   python gui.py
+   ```
+   
+   **Option B: API Server Only**
    ```bash
    python app.py
    ```
-
    The server will start on `http://localhost:8000`.
 
-4. Open the API documentation in your browser:
-   - Navigate to `http://localhost:8000/docs` for an interactive Swagger UI.
+4. **Explore the API**
+   - Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-## 🎮 How to Use
+## 📖 How to Use
 
-### API Endpoints
+### 🖥️ GUI Method
 
-Here are the main endpoints you can use to control the browser:
+Our user-friendly GUI provides easy access to all API functions:
 
-#### 1. **Start Browser**
-   - **Endpoint**: `POST /browser/start`
-   - **Description**: Starts a new browser session with optional settings.
-   - **Request Body**:
-     ```json
-     {
-       "url": "https://www.example.com",
-       "proxy": "http://username:password@proxyserver:port",
-       "headless": true,
-       "profile_name": "my-profile"
-     }
-     ```
-   - **Response**:
-     ```json
-     {
-       "success": true,
-       "data": {
-         "title": "Example Domain",
-         "profile": "my-profile"
-       }
-     }
-     ```
+1. Click "Start Server" to launch the API
+2. Configure your browser settings (profile, proxy, headless mode)
+3. Click "Start Browser" to launch a Chrome instance
+4. Use the tabs to:
+   - Navigate to websites
+   - Execute JavaScript
+   - View page HTML
+   - Take screenshots
 
-#### 2. **Navigate to URL**
-   - **Endpoint**: `POST /browser/navigate`
-   - **Description**: Navigate to a specific URL in the browser.
-   - **Request Body**:
-     ```json
-     {
-       "url": "https://www.example.com",
-       "timeout": 30
-     }
-     ```
-   - **Response**:
-     ```json
-     {
-       "success": true,
-       "data": {
-         "title": "Example Domain"
-       }
-     }
-     ```
+### ⚡ API Method
 
-#### 3. **Execute JavaScript**
-   - **Endpoint**: `POST /browser/javascript`
-   - **Description**: Run custom JavaScript on the current page.
-   - **Request Body**:
-     ```json
-     {
-       "script": "document.title",
-       "timeout": 30
-     }
-     ```
-   - **Response**:
-     ```json
-     {
-       "success": true,
-       "data": "Example Domain"
-     }
-     ```
+#### Core Endpoints
 
-#### 4. **Get Page HTML**
-   - **Endpoint**: `GET /browser/html`
-   - **Description**: Retrieve the HTML source of the current page.
-   - **Response**:
-     ```json
-     {
-       "success": true,
-       "data": {
-         "html": "<!DOCTYPE html>..."
-       }
-     }
-     ```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/browser/start` | POST | Start a new browser with custom settings |
+| `/browser/navigate` | POST | Navigate to a specified URL |
+| `/browser/javascript` | POST | Execute JavaScript code |
+| `/browser/html` | GET | Retrieve page HTML |
+| `/browser/screenshot` | GET | Take a screenshot |
+| `/browser/close` | POST | Close the browser |
+| `/browser/profiles` | GET | List available profiles |
 
-#### 5. **Take Screenshot**
-   - **Endpoint**: `GET /browser/screenshot`
-   - **Description**: Capture a screenshot of the current page.
-   - **Response**:
-     ```json
-     {
-       "success": true,
-       "data": {
-         "screenshot": "base64-encoded-image-data"
-       }
-     }
-     ```
+#### Example: Start a Browser Session
 
-#### 6. **Close Browser**
-   - **Endpoint**: `POST /browser/close`
-   - **Description**: Close the current browser session.
-   - **Response**:
-     ```json
-     {
-       "success": true
-     }
-     ```
+```bash
+curl -X POST http://localhost:8000/browser/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.example.com",
+    "headless": false,
+    "profile_name": "my-profile"
+  }'
+```
 
-#### 7. **List Profiles**
-   - **Endpoint**: `GET /browser/profiles`
-   - **Description**: List all available browser profiles.
-   - **Response**:
-     ```json
-     {
-       "success": true,
-       "data": {
-         "profiles": ["default", "my-profile"]
-       }
-     }
-     ```
+#### Example: Execute JavaScript
 
-### Example Workflow
+```bash
+curl -X POST http://localhost:8000/browser/javascript \
+  -H "Content-Type: application/json" \
+  -d '{
+    "script": "document.title",
+    "timeout": 30
+  }'
+```
 
-1. Start the browser with a specific profile:
-   ```bash
-   curl -X POST http://localhost:8000/browser/start -H "Content-Type: application/json" -d '{
-     "url": "https://www.example.com",
-     "profile_name": "my-profile"
-   }'
-   ```
+## 🛠️ Advanced Usage
 
-2. Navigate to another URL:
-   ```bash
-   curl -X POST http://localhost:8000/browser/navigate -H "Content-Type: application/json" -d '{
-     "url": "https://www.google.com"
-   }'
-   ```
+### 🔑 Profile Management
 
-3. Execute JavaScript:
-   ```bash
-   curl -X POST http://localhost:8000/browser/javascript -H "Content-Type: application/json" -d '{
-     "script": "document.title"
-   }'
-   ```
+Create different browser profiles to maintain separate cookies, cache, and session data:
 
-4. Take a screenshot:
-   ```bash
-   curl -X GET http://localhost:8000/browser/screenshot
-   ```
+```bash
+# Start with a specific profile
+curl -X POST http://localhost:8000/browser/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.example.com",
+    "profile_name": "shopping-account"
+  }'
+```
 
-5. Close the browser:
-   ```bash
-   curl -X POST http://localhost:8000/browser/close
-   ```
+### 🕵️ Proxy Configuration
+
+```bash
+# Use with a proxy
+curl -X POST http://localhost:8000/browser/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.example.com",
+    "proxy": "http://username:password@proxyserver:port"
+  }'
+```
 
 ## 🔍 Troubleshooting
 
-- **Port Already in Use**: Ensure port `8000` is free or change the port in `app.py`.
-- **Browser Not Starting**: Verify that Chrome is installed and accessible.
-- **Connection Issues**: Ensure the API server is running before making requests.
+- **Port Conflict**: If port 8000 is already in use, modify the port in `app.py`
+- **Chrome Not Found**: Ensure Chrome is installed in the default location
+- **Connection Issues**: Verify the server is running before making API calls
+
+## 🔜 Future Plans
+
+- ✨ TypeScript client library for easier integration
+- 📱 Support for mobile emulation
+- 🌐 Enhanced proxy rotation capabilities
+- 🧪 Additional browser fingerprinting protections
 
 ## ⚠️ Important Notes
 
-- This tool is for educational and legitimate research purposes only.
-- Always respect websites' terms of service.
-- Using proxies may violate some websites' terms.
+- This tool is intended for legitimate research, testing, and automation purposes
+- Always respect websites' terms of service and robots.txt
+- Using proxies may violate some websites' terms of service
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to open an issue or submit a pull request.
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## 📞 Support
+
+Need help? Have questions?
+- Telegram: [@codeideal_support](https://t.me/codeideal_support)
+- Email: codeideal.com@gmail.com
 
 ## 📝 License
 
