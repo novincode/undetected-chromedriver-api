@@ -33,7 +33,7 @@ A powerful REST API layer that wraps `undetected-chromedriver` to provide stealt
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/undetected-chromedriver-api.git
+   git clone https://github.com/nobincode/undetected-chromedriver-api.git
    cd undetected-chromedriver-api
    ```
 
